@@ -70,6 +70,7 @@ function Timeline() {
   const [DATA, setDATA] = useState();
   const [open, setOpen] = useState(false);
   const [filterNow, setFilterNow] = useState("lowpass");
+  const [subThrRatioChange, setSubThrRatio] = useState(false);
   const upperBPM = 200;
   const lowerBPM = 90;
 
@@ -83,9 +84,10 @@ function Timeline() {
     originaldata
   ) {
     // console.log(threashold, Subthreashold);
-    const peaksArray = [];
+    let peaksArray = [];
     // const Peaks = getPeaks(musicdata);
     const { length } = originaldata;
+    const mean = threashold / thrRatio;
     // V1------------------------------------------------------------------
     let findLower = true;
     for (let i = 0; i < length; i += 1) {
@@ -101,6 +103,29 @@ function Timeline() {
         findLower = false;
         // Skip forward ~ 1/4s to get past this peak.
       }
+    }
+
+    for (let i = 0; i < region.length; i += 1) {
+      // console.log("dao");
+      const s = region[i].Start * 44100;
+      const e = region[i].End * 44100;
+      const thr = mean * region[i].ThreashRatio;
+      const subPeak = [];
+      for (let t = s; t < e; t += 1) {
+        if (
+          originaldata[t] > thr &&
+          musicdata[t - 1] > musicdata[t] &&
+          musicdata[t] === 0
+        ) {
+          subPeak.push(t / 44100);
+          t += 4410;
+          // Skip forward ~ 1/4s to get past this peak.
+        }
+      }
+      const front = peaksArray.filter((time) => time < region[i].Start);
+      const back = peaksArray.filter((time) => time > region[i].End);
+      // console.log(s, e, front.length, back.length);
+      peaksArray = front.concat(subPeak).concat(back);
     }
     // V1 end--------------------------------------------------------------
     // V2 -----------------------------------------------------------------
@@ -169,6 +194,7 @@ function Timeline() {
   const findPeakAndCountBPM = () => {
     const data2 = musicProcessing(DATA);
     const b = getPeaksAtThreshold(data2[0], data2[1], data2[2], data2[3]);
+    // console.log(b.length);
     setPeak(b);
     const c = countIntervalsBetweenNearbyPeaks(b);
 
@@ -180,9 +206,9 @@ function Timeline() {
         MaxInt = c[i].interval;
       }
     }
-    console.log(`max interval: ${MaxInt}, count= ${MaxCou}`);
+    // console.log(`max interval: ${MaxInt}, count= ${MaxCou}`);
     // setInterval(MaxInt / 1000);
-    console.log("bpm:", MaxInt);
+    // console.log("bpm:", MaxInt);
     setInterval(60 / MaxInt);
   };
 
@@ -329,6 +355,10 @@ function Timeline() {
 
   const handleClose = () => {
     setOpen(false);
+    if (subThrRatioChange) {
+      findPeakAndCountBPM(DATA);
+      setSubThrRatio(false);
+    }
   };
 
   const updateRegion = (regionID) => {
@@ -402,14 +432,21 @@ function Timeline() {
                 DELETE
               </Button>
               <Typography id="discrete-slider-small-steps" gutterBottom>
-                Threashhold Ratio: {thrRatio}
+                Threashhold Ratio: {r.ThreashRatio}
               </Typography>
               <Slider
-                defaultValue={thrRatio}
+                key={`slider-${r.ThreashRatio}`}
+                defaultValue={r.ThreashRatio}
                 max={25}
                 min={5}
                 step={1}
-                onChange={newRatio}
+                onChange={(event, newValue) => {
+                  const sub = region;
+                  // console.log("change", sub[r.Value].ThreashRatio);
+                  sub[r.Value].ThreashRatio = newValue;
+                  setRegion(sub);
+                  setSubThrRatio(true);
+                }}
                 aria-labelledby="discrete-slider-small-steps"
                 valueLabelDisplay="auto"
                 marks
@@ -448,7 +485,7 @@ function Timeline() {
           onChange={(e) => {
             const v = e.target.value;
             setRegionNow(v);
-            if (!Number.isNaN(v)) {
+            if (!Number.isNaN(v) && v !== "None") {
               const r = region.filter((item) => {
                 return item.Value === v;
               });
@@ -513,6 +550,7 @@ function Timeline() {
                     Start: start,
                     End: end,
                     Value: region.length,
+                    ThreashRatio: thrRatio,
                   },
                 ]);
 
@@ -522,7 +560,7 @@ function Timeline() {
             >
               add
             </Button>
-            <TextField
+            {/* <TextField
               id="standard-basic"
               label="Zone"
               onChange={(e) => {
@@ -542,7 +580,7 @@ function Timeline() {
                   wavesurfer.zoom();
                 }
               }}
-            />
+            /> */}
             <Typography variant="subtitle1" gutterBottom>
               filter type
             </Typography>
