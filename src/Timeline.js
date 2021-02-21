@@ -13,6 +13,8 @@ import Dialog from "@material-ui/core/Dialog";
 import Accordion from "@material-ui/core/Accordion";
 import AccordionSummary from "@material-ui/core/AccordionSummary";
 import AccordionDetails from "@material-ui/core/AccordionDetails";
+import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
+// import TimelinePlugin from "wavesurfer.js/dist/plugin/wavesurfer.timeline";
 // import timeline from "wavesurfer.js/src/plugin/timeline";
 // import soundfile from "./DJ-Memory-Welcome-To-The-Jungle.mp3";
 // import soundfile from "./music.mp3";
@@ -29,7 +31,26 @@ function wavesurferInitilize(check) {
         regions.create({
           regionsMinLength: 0,
         }),
-        // timeline.create({
+        CursorPlugin.create({
+          showTime: true,
+          opacity: 1,
+          color: "#edf0f1",
+          customShowTimeStyle: {
+            "background-color": "#000",
+            color: "#fff",
+            padding: "2px",
+            "font-size": "10px",
+          },
+        }),
+        // TimelinePlugin.create({
+        //   container: "#wave-timeline",
+        //   unlabeledNotchColor: "white",
+        //   primaryColor: "white",
+        //   secondaryColor: "white",
+        //   primaryFontColor: "white",
+        //   secondaryFontColor: "white",
+        // }),
+        // // timeline.create({
         //   container: "#wave-timeline",
         // }),
       ],
