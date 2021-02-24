@@ -3,6 +3,8 @@ const express = require("express");
 // const courseRouter = require("./course");
 const loginRouter = require("./login");
 const syncRouter = require("./sync");
+const fetchRouter = require("./fetch");
+const branchRouter = require("./branch");
 // const voteRouter = require("./vote");
 // const commentRouter = require("./comment");
 
@@ -19,6 +21,12 @@ router.use("/login", loginRouter);
 
 // Handle sync post
 router.use("/sync", syncRouter);
+
+// Handle fetcg get
+router.use("/fetch", fetchRouter);
+
+// Handle fetcg get
+router.use("/branch", branchRouter);
 
 // // Handle Vote
 // router.use("/vote", voteRouter);

@@ -4,8 +4,9 @@
 const express = require("express");
 const path = require("path");
 const http = require("http");
-
+const mongoose = require("mongoose");
 const WebSocketApp = require("./websocket");
+
 const apiRouter = require("./routes");
 
 const app = express();
@@ -52,6 +53,25 @@ const port = 8080;
 //   const wss = new WebSocketApp(server);
 //   console.log(`Listening on port: ${port}`);
 // });
+
+// db settings below
+
+const dbOptions = {
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  auto_reconnect: true,
+  useUnifiedTopology: true,
+  poolSize: 10,
+};
+
+mongoose.connect("mongodb://mongo:27017", dbOptions);
+const db = mongoose.connection;
+
+db.on("error", console.error.bind(console, "connection error:"));
+
+db.once("open", () => {
+  console.log("Successfully connect to MongoDB!");
+});
 
 server.listen(port, () => {
   wss.listen();
