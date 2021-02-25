@@ -9,18 +9,23 @@ const findUser = async (username) => {
   return User.findOne({ username }).select("username password");
 };
 
-// Handle login post
+const createUser = async (username, password) => {
+  const newUser = User({ username, password });
+  await newUser.save();
+  return "User created";
+};
+
+// Handle register post
 router.route("/").post(
   express.urlencoded({ extended: false }),
   asyncHandler(async (req, res) => {
     const { username, password } = req.body;
     const user = await findUser(username);
-    if (!user) {
-      res.status(404).send("user not found");
-    } else if (password !== user.password) {
-      res.status(401).send("wrong password");
+    if ((await findUser(username)) !== null) {
+      res.send("Username used");
     } else {
-      res.status(201).send(user);
+      await createUser(username, password);
+      res.send("User created");
     }
     console.log(user);
     console.log(password);

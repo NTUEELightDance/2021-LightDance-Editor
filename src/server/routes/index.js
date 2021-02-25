@@ -5,6 +5,7 @@ const loginRouter = require("./login");
 const syncRouter = require("./sync");
 const fetchRouter = require("./fetch");
 const branchRouter = require("./branch");
+const registerRouter = require("./register");
 // const voteRouter = require("./vote");
 // const commentRouter = require("./comment");
 
@@ -15,6 +16,9 @@ const router = express.Router();
 
 // // For fetching course infomations
 // router.use("/course", courseRouter);
+
+// Handle register post
+router.use("/register", registerRouter);
 
 // Handle login post
 router.use("/login", loginRouter);

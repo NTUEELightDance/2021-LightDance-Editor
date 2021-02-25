@@ -2,6 +2,7 @@ const express = require("express");
 const asyncHandler = require("express-async-handler");
 
 const Branch = require("../models/branch");
+const { Action } = require("../models/action");
 
 const router = express.Router();
 
@@ -18,7 +19,7 @@ const deleteAllBranches = async () => {
 };
 
 const findAllBranches = async () => {
-  const allBranches = await Branch.find({}).select("time name");
+  const allBranches = await Branch.find({}).select("time name actions");
   return allBranches;
 };
 
@@ -31,8 +32,20 @@ const findBranch = async (name) => {
 };
 
 const initialize = async () => {
+  const dummyAction = {
+    from: "Ken",
+    type: "position",
+    mode: "EDIT",
+    data: "{Start: 1000}",
+  };
+  const actions = [];
+
+  for (let i = 0; i < 5; i += 1) {
+    actions.push(Action(dummyAction));
+  }
   await deleteAllBranches();
-  await createBranch("main");
+  console.log(actions);
+  await createBranch("main", actions);
 };
 
 initialize();
