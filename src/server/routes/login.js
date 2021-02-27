@@ -1,26 +1,22 @@
 const express = require("express");
 const asyncHandler = require("express-async-handler");
 
-const User = require("../models/user");
+const db = require("../db");
 
 const router = express.Router();
-
-const findUser = async (username) => {
-  return User.findOne({ username }).select("username password");
-};
 
 // Handle login post
 router.route("/").post(
   express.urlencoded({ extended: false }),
   asyncHandler(async (req, res) => {
     const { username, password } = req.body;
-    const user = await findUser(username);
+    const user = await db.findUser(username);
     if (!user) {
       res.status(404).send("user not found");
     } else if (password !== user.password) {
       res.status(401).send("wrong password");
     } else {
-      res.status(201).send(user);
+      res.status(201).send(username);
     }
     console.log(user);
     console.log(password);

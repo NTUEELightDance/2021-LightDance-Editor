@@ -64,16 +64,16 @@ const dbOptions = {
   poolSize: 10,
 };
 
-mongoose.connect("mongodb://mongo:27017", dbOptions);
+mongoose.connect("mongodb://localhost:27017", dbOptions);
 const db = mongoose.connection;
 
 db.on("error", console.error.bind(console, "connection error:"));
 
 db.once("open", () => {
   console.log("Successfully connect to MongoDB!");
-});
 
-server.listen(port, () => {
-  wss.listen();
-  console.log(`Listening on http://localhost:${port}`);
+  server.listen(port, () => {
+    wss.listen();
+    console.log(`Listening on http://localhost:${port}`);
+  });
 });

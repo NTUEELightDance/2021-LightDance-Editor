@@ -1,23 +1,19 @@
 const express = require("express");
+const asyncHandler = require("express-async-handler");
 
-const Branch = require("../models/branch");
+const db = require("../db");
 
 const router = express.Router();
 
-const commitToPull = (time, branch) => {
-  Branch.find({ branch, time: { $gte: Date.now() } }).then((response) => {
-    console.log(response);
-    console.log(Date.now());
-  });
-};
-
 // Handle login post
 
-router.route("/").get((req, res) => {
-  const { time, branch } = req.query;
-  console.log({ time, branch });
-  commitToPull();
-  res.send({ time, branch });
-});
+router.route("/").get(
+  asyncHandler(async (req, res) => {
+    const { time, branchName } = req.query;
+    console.log({ time, branchName });
+    const updateData = await db.getCommitToPull(time, branchName);
+    res.send({ time, branchName, updateData });
+  })
+);
 
 module.exports = router;
