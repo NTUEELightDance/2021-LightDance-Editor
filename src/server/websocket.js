@@ -23,6 +23,23 @@ class WebSocketApp {
       client.send(action);
     });
   }
+
+  handleRpiResponse() {
+    this.wss.clients.forEach((client) => {
+      client.onmessage = (message) => {
+        const [task, payload] = JSON.parse(message.data);
+        console.log(`Command Server response: ${task}\nPayload: ${payload}`);
+
+        switch (task) {
+          case "boardInfo":
+            // destructure payload and write board_config.json
+            break;
+          default:
+            break;
+        }
+      };
+    });
+  }
 }
 
 module.exports = WebSocketApp;
