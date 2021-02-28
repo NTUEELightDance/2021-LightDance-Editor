@@ -18,12 +18,6 @@ const { COMMANDS } = require("../../constant");
 
 const router = express.Router();
 
-// For mainpage to fetch what courses the user followed
-// router.use("/user", userRouter);
-
-// // For fetching course infomations
-// router.use("/course", courseRouter);
-
 // Handle register post
 router.use("/register", registerRouter);
 
@@ -38,12 +32,6 @@ router.use("/fetch", fetchRouter);
 
 // Handle fetcg get
 router.use("/branch", branchRouter);
-
-// // Handle Vote
-// router.use("/vote", voteRouter);
-
-// //Handle comment
-// router.use("/comment", commentRouter);
 
 // Handle command post
 COMMANDS.forEach((command) => {
