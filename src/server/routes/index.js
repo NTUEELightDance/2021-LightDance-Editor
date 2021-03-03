@@ -1,14 +1,11 @@
 const express = require("express");
 const fs = require("fs");
-// const userRouter = require("./user");
-// const courseRouter = require("./course");
+
 const loginRouter = require("./login");
 const syncRouter = require("./sync");
 const fetchRouter = require("./fetch");
 const branchRouter = require("./branch");
 const registerRouter = require("./register");
-// const voteRouter = require("./vote");
-// const commentRouter = require("./comment");
 
 // constants
 const { COMMANDS } = require("../../constant");

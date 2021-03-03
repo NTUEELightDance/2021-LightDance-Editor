@@ -6,10 +6,7 @@ const { LensOutlined } = require("@material-ui/icons");
 // operations for Branch
 const createBranch = async (name, actions = []) => {
   const newBranch = Branch({ name, actions });
-  newBranch.save((err) => {
-    if (err) console.log(err);
-    // saved!
-  });
+  return newBranch.save();
 };
 
 const deleteAllBranches = async () => {
@@ -29,14 +26,22 @@ const findBranch = async (name) => {
   return !((await Branch.findOne({ name })) === null);
 };
 
+const addActionToBranch = async (branchName, from, type, mode, data) => {
+  const newAction = Action({ from, type, mode, data: JSON.stringify(data) });
+  const branch = await Branch.findOne({ name: branchName });
+  branch.actions.push(newAction);
+  return branch.save();
+};
+
 const getCommitToPull = async (time, name) => {
+  console.log("request");
   let newActions = await Branch.findOne({
     name,
     time: { $gte: time },
   }).select("actions");
-  newActions = newActions.actions.reverse();
+  newActions = newActions.actions;
   const timeRecord = {};
-  for (let i = 0; i < newActions.length; i += 1) {
+  for (let i = newActions.length - 1; i >= 0; i -= 1) {
     const action = newActions[i];
     const parsedData = JSON.parse(action.data);
     const curTime = parsedData.Start;
@@ -47,11 +52,17 @@ const getCommitToPull = async (time, name) => {
       newActions[timeRecord[curTime]].mode === "DEL"
     ) {
       timeRecord[curTime] = -1;
+    } else if (
+      action.mode === "ADD" &&
+      newActions[timeRecord[curTime]].mode === "EDIT"
+    ) {
+      newActions[timeRecord[curTime]].mode = "ADD";
     }
   }
   const updateData = newActions.filter((aciton, i) => {
     return Object.values(timeRecord).includes(i);
   });
+
   return updateData;
 };
 
@@ -59,43 +70,38 @@ const initialize = async () => {
   let time;
   let x;
   const actions = [];
-
-  for (let i = 0; i < 5; i += 1) {
-    x = Math.random();
-    time = 1000 * i;
-    actions.push(
-      Action({
-        from: "Ken",
-        type: "position",
-        mode: "ADD",
-        data: `{"Start": ${time}, "x": ${x}, "y": ${x}, "z": ${x}}`,
-      })
-    );
-    actions.push(
-      Action({
-        from: "Ken",
-        type: "position",
-        mode: "EDIT",
-        data: `{"Start": ${time}, "x": ${x + 1}, "y": ${x + 2}, "z": ${x + 3}}`,
-      })
-    );
-  }
-
-  for (let i = 0; i < 5; i += 1) {
-    x = Math.random();
-    time = 1000 * i;
-    actions.push(
-      Action({
-        from: "Ken",
-        type: "position",
-        mode: "EDIT",
-        data: `{"Start": ${time}, "x": ${x + 1}, "y": ${x + 2}, "z": ${x + 3}}`,
-      })
-    );
-  }
   await deleteAllBranches();
-  console.log(actions);
   await createBranch("main", actions);
+
+  for (let i = 0; i < 5; i += 1) {
+    x = Math.random();
+    time = 1000 * i;
+    await addActionToBranch("main", "Ken", "position", "ADD", {
+      Start: time,
+      x,
+      y: x,
+      z: x,
+    });
+    await addActionToBranch("main", "Ken", "position", "EDIT", {
+      Start: time,
+      x,
+      y: x,
+      z: x,
+    });
+  }
+
+  for (let i = 0; i < 5; i += 1) {
+    x = Math.random();
+    time = 1000 * i;
+    console.log(x);
+    await addActionToBranch("main", "Ken", "position", "EDIT", {
+      Start: time,
+      x,
+      y: x,
+      z: x,
+    });
+  }
+  // console.log(actions);
 };
 
 // Operations for User
@@ -115,6 +121,7 @@ module.exports = {
   deleteBranch,
   findAllBranches,
   findBranch,
+  addActionToBranch,
   getCommitToPull,
   initialize,
   findUser,

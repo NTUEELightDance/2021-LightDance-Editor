@@ -11,14 +11,12 @@ router.route("/").post(
   asyncHandler(async (req, res) => {
     const { username, password } = req.body;
     const user = await db.findUser(username);
-    if ((await db.findUser(username)) !== null) {
+    if (user !== null) {
       res.send("Username used");
     } else {
       await db.createUser(username, password);
       res.send("User created");
     }
-    console.log(user);
-    console.log(password);
   })
 );
 
