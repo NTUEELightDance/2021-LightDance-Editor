@@ -8,9 +8,9 @@ const http = require("http");
 const bodyParser = require("body-parser");
 
 const { COMMANDS } = require("../constant");
-const DancerSocket = require("./websocket/DancerSocket");
+const DancerSocket = require("./websocket/dancerSocket");
 const EditorSocket = require("./websocket/editorSocket");
-const board_config = require("./board_config.json");
+const board_config = require("../../data/board_config.json");
 
 // const router = express.Router();
 const app = express();
@@ -21,6 +21,9 @@ const dancerClients = {};
 const editorClients = {};
 
 const socketReceiveData = (from, msg) => {
+  console.log("dancerClients: ", Object.keys(dancerClients));
+  console.log("editorClients: ", Object.keys(editorClients));
+
   const { type, task, payload } = msg;
   console.log("Type: ", type, ", task: ", task, ", payload: ", payload);
   switch (type) {
@@ -88,49 +91,66 @@ if (process.env.NODE_ENV === "dev") {
   app.use(express.static(buildPath));
 }
 
-wss.on("connection", (ws) => {
-  ws.onmessage = (msg) => {
-    const [task, payload] = JSON.parse(msg.data);
-    console.log("Client response: ", task, "\nPayload: ", payload);
-
-    if (task === "boardInfo") {
-      const hostName = payload.name;
-      if (true) {
-        // TODO import board_config to check dancer's name
-        let dancerName = "";
-        if (board_config[hostName] !== undefined)
-          dancerName = board_config[hostName].dancerName;
-        // get dancerName from hostname
-        // const dancerName = "test_dancer"; // test
-
-        // ask about dancerClient
-        const dancerSocket = new DancerSocket(
-          ws,
-          dancerName,
-          DancerSocketAgent
-        );
-        dancerSocket.handleMessage();
-      }
-    } else if (task === "editor") {
-      const editorName = "test_editor"; // test
-
-      const editorSocket = new EditorSocket(ws, editorName, EditorSocketAgent);
-      editorSocket.handleMessage();
-    }
-  };
-});
-
 const assetPath = path.resolve(__dirname, "..", "..", "./asset");
 app.use("/asset", express.static(assetPath));
 const dataPath = path.resolve(__dirname, "..", "..", "./data");
 app.use("/data", express.static(dataPath));
 
-app.use(bodyParser.json());
+wss.on("connection", (ws) => {
+  ws.onmessage = (msg) => {
+    const [task, payload] = JSON.parse(msg.data);
+    console.log("Client response: ", task, "\nPayload: ", payload);
+
+    const { type } = payload;
+
+    if (task === "boardInfo") {
+      const hostName = payload.name;
+      // import board_config to check dancer's name
+      // get dancerName from hostname
+      if (type === "dancer") {
+        if (board_config[hostName] !== undefined) {
+          const { dancerName } = board_config[hostName];
+          // ask about dancerClient
+          const dancerSocket = new DancerSocket(
+            ws,
+            dancerName,
+            DancerSocketAgent
+          );
+          dancerSocket.handleMessage();
+
+          const firstMsg = {
+            type: payload.type,
+            task,
+            payload: {
+              OK: payload.OK,
+              msg: payload.msg,
+              ip: dancerSocket.clientIp,
+            },
+          };
+
+          socketReceiveData(dancerName, firstMsg);
+        }
+      } else if (type === "editor") {
+        const editorName = hostName; // send from editorSocketAPI
+
+        const editorSocket = new EditorSocket(
+          ws,
+          editorName,
+          EditorSocketAgent
+        );
+
+        editorSocket.handleMessage();
+      }
+    }
+  };
+});
+
+app.use(bodyParser.json({ limit: "200mb" }));
 
 COMMANDS.forEach((command) => {
   app.post(`/api/${command}`, (req, res) => {
-    console.log(command); // for test
-    console.log(req.body);
+    // console.log(command); // for test
+    // console.log(req.body);
     const { selectedDancers } = req.body;
     switch (command) {
       case "play": {
@@ -143,7 +163,14 @@ COMMANDS.forEach((command) => {
       case "uploadControl": {
         const { controlJson } = req.body;
         selectedDancers.forEach((dancerName) => {
-          dancerClients[dancerName].uploadControl(controlJson);
+          // TODO: if the status is same as last one => need to delete
+          const dancerJson = controlJson.map(({ start, status, fade }) => ({
+            start,
+            fade,
+            status: status[dancerName],
+          }));
+          // console.log(`server/app.js, uploadControl`, dancerJson);
+          dancerClients[dancerName].uploadControl(dancerJson);
         });
         break;
       }
@@ -157,7 +184,9 @@ COMMANDS.forEach((command) => {
       case "lightCurrentStatus": {
         const { lightCurrentStatus } = req.body;
         selectedDancers.forEach((dancerName) => {
-          dancerClients[dancerName].lightCurrentStatus(lightCurrentStatus);
+          dancerClients[dancerName].lightCurrentStatus(
+            lightCurrentStatus[dancerName]
+          );
         });
         break;
       }
