@@ -34,11 +34,12 @@ class DancerSocket {
         if (this.ws !== null) {
             console.log(this.ws._socket.remoteAddress);
             this.clientIp = this.ws._socket.remoteAddress;
+            return this.clientIp;
         }
     };
     //below are functions for editor server to use
     start = () => {
-        this.sendDataToRpiSocket(["start"]);
+        this.sendDataToRpiSocket(["start", this.dancerName]);
     };
     play = (startTime = 0, whenToPlay = 0) => {
         this.sendDataToRpiSocket([

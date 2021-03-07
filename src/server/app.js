@@ -22,6 +22,7 @@ const editorClients = {};
 
 const socketReceiveData = (from, msg) => {
   const { type, task, payload } = msg;
+  console.log("Type: ", type, ", task: ", task, ", payload: ", payload);
   switch (type) {
     case "dancer": {
       Object.values(editorClients).forEach((editor) => {
