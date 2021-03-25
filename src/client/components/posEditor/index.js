@@ -5,7 +5,11 @@ import Scrollbars from "react-custom-scrollbars";
 import { makeStyles } from "@material-ui/core/styles";
 
 // redux selector and actions
-import { saveCurrentPos, deleteCurrentPos } from "../../slices/globalSlice";
+import {
+  saveCurrentPos,
+  deleteCurrentPos,
+  posTimeShift,
+} from "../../slices/globalSlice";
 // components
 import ModeSelector from "../modeSelector";
 import PosList from "./posList";
@@ -43,6 +47,16 @@ export default function PosEditor() {
       dispatch(deleteCurrentPos());
     }
   };
+
+  const handelShift = (start, end, shift) => {
+    dispatch(
+      posTimeShift({
+        start: Number(start),
+        end: Number(end),
+        shift: Number(shift),
+      })
+    );
+  };
   // scroll bar config
   const renderThumb = ({ style, ...props }) => {
     const thumbStyle = {
@@ -54,7 +68,11 @@ export default function PosEditor() {
 
   return (
     <div className={classes.root}>
-      <ModeSelector handleSave={handleSave} handleDelete={handleDelete} />
+      <ModeSelector
+        handleSave={handleSave}
+        handleDelete={handleDelete}
+        handelShift={handelShift}
+      />
       <div className={classes.grow}>
         <Scrollbars renderThumbVertical={renderThumb}>
           <PosList />

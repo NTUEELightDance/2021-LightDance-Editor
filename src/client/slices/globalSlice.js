@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-param-reassign */
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, current } from "@reduxjs/toolkit";
 // constants
 import { IDLE, EDIT, ADD } from "../constants";
 // utils
@@ -9,6 +9,7 @@ import {
   updateFrameByTime,
   interpolationPos,
   fadeStatus,
+  binarySearchFrame,
 } from "../utils/math";
 import { setItem, getItem } from "../utils/localStorage";
 
@@ -716,6 +717,81 @@ export const globalSlice = createSlice({
         state.dancerStatus[dancerName].msg = "";
       });
     },
+
+    controlTimeShift: (state, action) => {
+      const { start, end, shift } = action.payload;
+      if (start + shift < 0) {
+        throw new Error(`[Error] invalid time after time shift`);
+      }
+      const controlStartFrame =
+        binarySearchFrame(state.controlRecord, start) + 1;
+      const controlEndFrame = binarySearchFrame(state.controlRecord, end) + 1;
+
+      const controlFrames = state.controlRecord.slice(
+        controlStartFrame,
+        controlEndFrame
+      );
+      state.controlRecord.splice(
+        controlStartFrame,
+        controlEndFrame - controlStartFrame
+      );
+
+      let currentFrame = binarySearchFrame(
+        state.controlRecord,
+        controlFrames[0].start + shift
+      );
+
+      while (controlFrames.length > 0) {
+        if (currentFrame === state.controlRecord.length) {
+          const toInsert = controlFrames.shift();
+          toInsert.start += shift;
+          state.controlRecord.splice(currentFrame + 1, 0, toInsert);
+        } else if (
+          controlFrames[0].start + shift >=
+          state.controlRecord[currentFrame].start
+        ) {
+          const toInsert = controlFrames.shift();
+          toInsert.start += shift;
+          state.controlRecord.splice(currentFrame + 1, 0, toInsert);
+        }
+        currentFrame += 1;
+      }
+
+      setItem("control", JSON.stringify(state.controlRecord));
+    },
+
+    posTimeShift: (state, action) => {
+      const { start, end, shift } = action.payload;
+      if (start + shift < 0) {
+        throw new Error(`[Error] invalid time after time shift`);
+      }
+      const posStartFrame = binarySearchFrame(state.posRecord, start) + 1;
+      const posEndFrame = binarySearchFrame(state.posRecord, end) + 1;
+
+      const posFrames = state.posRecord.slice(posStartFrame, posEndFrame);
+      state.posRecord.splice(posStartFrame, posEndFrame - posStartFrame);
+
+      let currentFrame = binarySearchFrame(
+        state.posRecord,
+        posFrames[0].start + shift
+      );
+      while (posFrames.length > 0) {
+        if (currentFrame === state.posRecord.length) {
+          const toInsert = posFrames.shift();
+          toInsert.start += shift;
+          state.posRecord.splice(currentFrame, 0, toInsert);
+        } else if (
+          posFrames[0].start + shift <
+          state.posRecord[currentFrame].start
+        ) {
+          const toInsert = posFrames.shift();
+          toInsert.start += shift;
+          state.posRecord.splice(currentFrame, 0, toInsert);
+        }
+        currentFrame += 1;
+      }
+      setItem("position", JSON.stringify(state.posRecord));
+    },
   },
 });
 
@@ -765,6 +841,9 @@ export const {
   initDancerStatus,
   updateDancerStatus,
   clearDancerStatusMsg,
+
+  controlTimeShift,
+  posTimeShift,
 } = globalSlice.actions;
 
 export const selectGlobal = (state) => state.global;

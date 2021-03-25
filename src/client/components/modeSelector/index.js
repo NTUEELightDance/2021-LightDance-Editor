@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect, useContext, useState } from "react";
 import PropTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
 // mui
@@ -7,15 +7,37 @@ import Button from "@material-ui/core/Button";
 import { selectGlobal, toggleMode } from "../../slices/globalSlice";
 // constants
 import { IDLE, ADD, EDIT } from "../../constants";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import TextField from "@material-ui/core/TextField";
 
-export default function ModeSelector({ handleSave, handleDelete }) {
+export default function ModeSelector({ handleSave, handleDelete, handelShift }) {
   // redux states
   const { mode } = useSelector(selectGlobal);
+  const [shiftOpen, setShiftOpen] = useState(false);
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [timeShift, setTimeShift] = useState("");
+
   const dispatch = useDispatch();
 
   // mode
   const handleChangeMode = (m) => {
     dispatch(toggleMode(m));
+  };
+
+  const handelOpen = () => {
+    setShiftOpen(true);
+  };
+
+  const handelClose = () => {
+    setShiftOpen(false);
+  };
+
+  const requestShift = () => {
+    handelShift(start, end, timeShift);
+    setShiftOpen(false);
   };
 
   // keyDown to change mode (include multiple keyDown)
@@ -73,6 +95,46 @@ export default function ModeSelector({ handleSave, handleDelete }) {
       >
         DEL
       </Button>
+      <Button
+        onClick={handelOpen}
+        size="small"
+        variant="outlined"
+        color="primary"
+      >
+        SHIFT
+      </Button>
+      <Dialog open={shiftOpen} onClose={handelClose}>
+        <DialogTitle>Time Shift</DialogTitle>
+        <DialogContent>
+          <div>
+            <TextField
+              onChange={(e) => {
+                setStart(e.target.value);
+              }}
+              label="start"
+            />
+          </div>
+          <div>
+            <TextField
+              onChange={(e) => {
+                setEnd(e.target.value);
+              }}
+              label="end"
+            />
+          </div>
+          <div>
+            <TextField
+              onChange={(e) => {
+                setTimeShift(e.target.value);
+              }}
+              label="shift"
+            />
+          </div>
+          <div>
+            <Button onClick={requestShift}>SHIFT</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

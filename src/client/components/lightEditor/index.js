@@ -9,6 +9,7 @@ import {
   saveCurrentStatus,
   deleteCurrentStatus,
   saveCurrentFade,
+  controlTimeShift,
 } from "../../slices/globalSlice";
 // components
 import SelectDancer from "./selectDancer";
@@ -74,11 +75,25 @@ export default function LightEditor() {
     }
   };
 
+  const handelShift = (start, end, shift) => {
+    dispatch(
+      controlTimeShift({
+        start: Number(start),
+        end: Number(end),
+        shift: Number(shift),
+      })
+    );
+  };
+
   // TODO: make ModeSelector and  selectDancer fixed position
   return (
     <div id="editor" className={classes.root}>
       <div>
-        <ModeSelector handleSave={handleSave} handleDelete={handleDelete} />
+        <ModeSelector
+          handleSave={handleSave}
+          handleDelete={handleDelete}
+          handelShift={handelShift}
+        />
         <SelectDancer className={classes.selectDancer} />
       </div>
       <div className={classes.grow}>
